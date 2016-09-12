@@ -6,50 +6,146 @@ from text.chemical_entity import element_base, ChemicalEntity
 from text.chemical_entity import amino_acids
 from text.dna_entity import DNAEntity
 from text.entity import Entity
-from text.mirna_entity import MirnaEntity
-from text.protein_entity import ProteinEntity
+#from text.mirna_entity import MirnaEntity
+#from text.protein_entity import ProteinEntity
 from text.time_entity import TimeEntity
 from text.event_entity import EventEntity
+from text.hpo_entity import HPOEntity
 
-feature_extractors = {# "text": lambda x, i: x.tokens[i].text,
+#dic = []
+#a = open("data/gazette.txt").readlines()
+#for x in a:
+#    dic.append(x.strip()) 
+
+paths = open("data/paths").readlines()
+path_dic = {}
+for x in paths:
+    y = x.strip().split("\t")
+    path_dic[y[1]] = y[0]
+
+
+feature_extractors = {"text": lambda x, i: x.tokens[i].text,
                       "prefix3": lambda x, i: x.tokens[i].text[:3],
                       "prevprefix3": lambda x, i: prev_prefix(x, i, 3),
-                      "nextprefix3": lambda x, i: next_prefix(x, i, 3),
-                      "suffix3": lambda x, i: x.tokens[i].text[-3:],
+                      #"nextprefix3": lambda x, i: next_prefix(x, i, 3),
+                      #"suffix3": lambda x, i: x.tokens[i].text[-3:],
                       "prevsuffix3": lambda x, i: prev_suffix(x, i, 3),
                       "nextsuffix3": lambda x, i: next_suffix(x, i, 3),
                       "prefix2": lambda x, i: x.tokens[i].text[:2],
-                      "suffix2": lambda x, i: x.tokens[i].text[-2:],
-                      "prefix4": lambda x, i: x.tokens[i].text[:4],
-                      "suffix4": lambda x, i: x.tokens[i].text[-4:],
-                      "hasnumber": lambda x, i: str(any(c.isdigit() for c in x.tokens[i].text)),
+                      #"suffix2": lambda x, i: x.tokens[i].text[-2:], #Removes total jaw cysts.
+                      #"prefix4": lambda x, i: x.tokens[i].text[:4],
+                      #"suffix4": lambda x, i: x.tokens[i].text[-4:],
+                      #"hasnumber": lambda x, i: str(any(c.isdigit() for c in x.tokens[i].text)),
                       "case": lambda x, i: word_case(x.tokens[i].text),
-                      "prevcase": lambda x, i: prev_case(x, i),
-                      "nextcase": lambda x, i: next_case(x, i),
-                      "lemma": lambda x, i: x.tokens[i].lemma,
+                      #"prevcase": lambda x, i: prev_case(x, i),
+                      #"nextcase": lambda x, i: next_case(x, i),
+                      "lemma": lambda x, i: x.tokens[i].lemma, #Makes go down. Although with next ones go very slightly up.
                       "prevlemma": lambda x, i: prev_lemma(x,i),
-                      "nextlemma": lambda x, i: next_lemma(x,i),
+                      #"nextlemma": lambda x, i: next_lemma(x,i),
                       "postag": lambda x, i: x.tokens[i].pos,
                       "prevpostag": lambda x, i: prev_pos(x,i),
                       "nextpostag": lambda x, i: next_pos(x,i),
                       "wordclass": lambda x, i: wordclass(x.tokens[i].text),
                       "prevwordclass": lambda x, i: prev_wordclass(x, i),
-                      "nextwordclass": lambda x, i: next_wordclass(x, i),
-                      "simplewordclass": lambda x, i: simplewordclass(x.tokens[i].text),
+                      "prevword": lambda x, i: prev_word(x, 1),
+                      "prevword2": lambda x, i: prev_word(x, 2),
+                      "prevword3": lambda x, i: prev_word(x, 3),
+                      "prevword4": lambda x, i: prev_word(x, 4),
+                      "prevword5": lambda x, i: prev_word(x, 5),
+                      "prevword6": lambda x, i: prev_word(x, 6),
+                      "nextword": lambda x, i: prev_word(x, 1),
+                      "nextword2": lambda x, i: prev_word(x, 2),
+                      "nextword3": lambda x, i: prev_word(x, 3),
+                      "nextword4": lambda x, i: prev_word(x, 4),
+                      "nextword5": lambda x, i: prev_word(x, 5),
+                      "nextword6": lambda x, i: prev_word(x, 6),
+                      #"in_dic": lambda x, i: word_in_dictionary(x.tokens[i].text, dic),
+                      "prev_word_and": lambda x, i: prev_word_and(x, i),
+                      "next_word_and": lambda x, i: next_word_and(x, i),
+                      "brown_cluster": lambda x, i: brown_cluster(x, i),
+                      #"prev_words": lambda x, i: prev_words(x, i, 2),
+                      #"next_words": lambda x, i: next_words(x, i, 6),
+
+
+                      #"nextwordclass": lambda x, i: next_wordclass(x, i),
+                      #"simplewordclass": lambda x, i: simplewordclass(x.tokens[i].text),
                       # "greek": lambda x, i: str(has_greek_symbol(x.tokens[i].text)),
                       # "aminoacid": lambda x, i: str(any(w in amino_acids for w in x.tokens[i].text.split('-'))),
                       # "periodictable": lambda x, i: str(x.tokens[i].text in element_base.keys() or x.tokens[i].text.title() in zip(*element_base.values())[0]), # this should probably be its own function ffs
                       }
-
-def word_in_dictionary(word, dictionary):
-    # TODO:
-    pass
 
 def prev_wordclass(sentence, i):
     if i == 0:
         return "BOS"
     else:
         return wordclass(sentence.tokens[i-1].text)
+
+
+#####
+def brown_cluster(sentence, i):
+    try:
+        return path_dic[sentence.tokens[i].text]
+    except KeyError:
+        return "NON"
+
+def prev_words(sentence, i, j):
+    if i-j <= 0:
+        return "BOS"
+#    if i+j >= len(sentence.tokens) - 1:
+#        return "EOS"
+    else:
+        words = []
+        for p in reversed(range(1,j+1)):
+            words.append(sentence.tokens[i-p].text)
+        #print str(words)
+        return str(words)
+
+def next_words(sentence, i, j):
+#    if i-j <= 0:
+#        return "BOS"
+    if i+j >= len(sentence.tokens) - 1:
+        return "EOS"
+    else:
+        words = []
+        for p in reversed(range(1,j+1)):
+            words.append(sentence.tokens[i+p].text)
+        return str(words)
+
+def prev_word(sentence, i):
+    if i <= 0:
+        return "BOS"
+    if i >= len(sentence.tokens) - 1:
+        return "EOS"
+    else:
+        return sentence.tokens[i-1].text
+
+def next_word(sentence, i):
+    if i >= len(sentence.tokens) - 1:
+        return "EOS"
+    if i <= 0:
+        return "BOS"
+    else:
+        return sentence.tokens[i+1].text
+
+def prev_word_and(sentence, i):
+    if i <= 0:
+        return "BOS"
+    else:
+        if sentence.tokens[i-1].text == "and" or sentence.tokens[i-1].text == "or":
+            return "1"
+        else:
+            return "0"
+
+def next_word_and(sentence, i):
+    if i >= len(sentence.tokens) - 1:
+        return "EOS"
+    else:
+        if sentence.tokens[i+1].text == "and" or sentence.tokens[i+1].text == "or":
+            return "1"
+        else:
+            return "0"
+
+#####
 
 def next_wordclass(sentence, i):
     if i == len(sentence.tokens) - 1:
@@ -353,6 +449,9 @@ def create_entity(tokens, sid, did, text, score, etype, **kwargs):
     if etype == "chemical":
         e = ChemicalEntity(tokens, sid, text=text, score=score,
                            did=did, eid=kwargs.get("eid"), subtype=kwargs.get("subtype"))
+    elif etype == "hpo":
+        e = HPOEntity(tokens, sid, text=text, did=did,score=score,
+                          eid=kwargs.get("eid"), subtype=kwargs.get("subtype"), nextword=kwargs.get("nextword"))
     elif etype == "mirna":
         e = MirnaEntity(tokens, sid, text=text, did=did, score=score,
                         eid=kwargs.get("eid"), subtype=kwargs.get("subtype"), nextword=kwargs.get("nextword"))

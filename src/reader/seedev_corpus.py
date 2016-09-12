@@ -25,7 +25,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.svm import LinearSVC
 
 from classification.rext.jsrekernel import JSREKernel
-from classification.rext.multir import MultiR
+#from classification.rext.multir import MultiR
 from classification.rext.rules import RuleClassifier
 from classification.rext.scikitre import ScikitRE
 from classification.rext.stanfordre import StanfordRE

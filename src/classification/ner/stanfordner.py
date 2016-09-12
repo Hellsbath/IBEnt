@@ -9,7 +9,7 @@ import atexit
 from socket import error as SocketError
 import errno
 
-from text.protein_entity import ProteinEntity
+#from text.protein_entity import ProteinEntity
 from text.offset import Offsets, Offset
 from classification.results import ResultsNER
 from classification.ner.simpletagger import SimpleTaggerModel, create_entity
@@ -66,6 +66,10 @@ class StanfordNERModel(SimpleTaggerModel):
 
     def train(self):
         self.write_prop()
+        # if "hpo" in self.path or "tsting" in self.path or "hpo_train" in self.path: ######### HPO ##########3
+        #     self.save_corpus_to_sbilou(entity_type="BIOLOGICAL")
+        # else:
+        #     self.save_corpus_to_sbilou()
         self.save_corpus_to_sbilou()
         logging.info("Training model with StanfordNER")
         process = Popen(self.PARAMS, stdout=PIPE, stderr=PIPE)
@@ -112,6 +116,7 @@ class StanfordNERModel(SimpleTaggerModel):
     def process_results(self, sentences, corpus):
         results = ResultsNER(self.path)
         results.corpus = corpus
+
         for isent, sentence in enumerate(sentences):
             results = self.process_sentence(sentence, self.sids[isent], results)
         logging.info("found {} entities".format(len(results.entities)))
@@ -126,6 +131,7 @@ class StanfordNERModel(SimpleTaggerModel):
             print [s.sid for s in results.corpus.documents['.'.join(sid.split('.')[:-1])].sentences]
             sys.exit()
         tagged_tokens = self.tag_tokens(out, sentence)
+        #print tagged_tokens[0][2].text, "**************************************************************************************************************"
         sentence.tagged = tagged_tokens
         new_entity = None
         for t in tagged_tokens:

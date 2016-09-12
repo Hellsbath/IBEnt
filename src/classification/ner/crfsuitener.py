@@ -13,20 +13,44 @@ class CrfSuiteModel(SimpleTaggerModel):
 
     def train(self):
         logging.info("Training model with CRFsuite")
-        self.trainer = pycrfsuite.Trainer(verbose=False)
+        self.trainer = pycrfsuite.Trainer(verbose=False) #algorithm="l2sgd",
+        #logging.info(self.trainer.get(self.trainer))
+        #print self.trainer
+        #logging.info(self.data)
+        #logging.info(self.labels)
         for xseq, yseq in zip(self.data, self.labels):
             self.trainer.append(xseq, yseq)
         self.trainer.set_params({
-            'c1': 1.0,   # coefficient for L1 penalty
-             # 'c2': 1e-3,  # coefficient for L2 penalty
+            'c1': 0.9833333,   # coefficient for L1 penalty
+            'c2': 1,  # coefficient for L2 penalty
+            #'epsilon': 1e-10,
             # 'c2': 2,
-            'max_iterations': 500,  # stop earlier
+            #'max_iterations': 2500,  # stop earlier
 
             # include transitions that are possible, but not observed
-            'feature.possible_transitions': True
+            'feature.possible_transitions': 1,
+            'feature.possible_states': 1
         })
+        # self.trainer.set_params({
+        #     #'c1': 0.98335,   # coefficient for L1 penalty
+        #     'period': 500,
+        #     'max_iterations': 10000,
+        #     'calibration.eta': 0.05,
+        #     'calibration.rate': 1,
+        #     'calibration.samples': 10000,
+        #     'calibration.candidates': 100,
+        #     'calibration.max_trials': 200,
+        #      # 'c2': 1e-3,  # coefficient for L2 penalty
+        #     # 'c2': 2,
+        #     #'max_iterations': 2500,  # stop earlier
+
+        #     # include transitions that are possible, but not observed
+        #     'feature.possible_transitions': 1,
+        #     'feature.possible_states': 1
+        # })
         print "training model..."
         self.trainer.train(self.path + ".model")  # output model filename
+        logging.info(self.trainer.logparser.last_iteration)
         print "done."
 
 
@@ -56,7 +80,11 @@ class CrfSuiteModel(SimpleTaggerModel):
                         #sys.exit()
                 #else:
                 #    print prob
+                #a = str(prob) + "\t" + str(x) + "\t" + str(i)
+                #logging.info(a)
+
                 self.scores[-1].append(prob)
+            #logging.info(xseq)
         results = self.process_results(corpus)
         return results
 
@@ -127,6 +155,7 @@ class CrfSuiteModel(SimpleTaggerModel):
 
     def word2features(self, sent, i):
         # adapted from https://github.com/tpeng/python-crfsuite
+        #logging.info("SOOOOOOOOOOOO CALLLLLLLLLLLED ************************")
         word = sent[i][0]
         postag = sent[i][1]
         features = [
@@ -170,10 +199,13 @@ class CrfSuiteModel(SimpleTaggerModel):
 
 
     def sent2features(self, sent):
+        logging.info("SOOOOOOOOOOOO CALLLLLLLLLLLED ************************")
         return [self.word2features(sent, i) for i in range(len(sent))]
 
     def sent2labels(self, sent):
+        logging.info("SOOOOOOOOOOOO CALLLLLLLLLLLED ************************")
         return [label for token, postag, label in sent]
 
     def sent2tokens(self, sent):
+        logging.info("SOOOOOOOOOOOO CALLLLLLLLLLLED ************************")
         return [token for token, postag, label in sent]

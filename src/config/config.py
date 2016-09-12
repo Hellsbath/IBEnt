@@ -30,6 +30,12 @@ with open("settings.json") as settings:
         go_user = vals["go_user"]
         go_pw = vals["go_pw"]
         go_db = vals["go_db"]
+    use_hpo = vals["use_hpo"]
+    if use_hpo:                  #####
+        hpo_host = vals["hpo_host"]
+        hpo_user = vals["hpo_user"]
+        hpo_pw = vals["hpo_pw"]
+        hpo_db = vals["hpo_db"]
     host_ip = vals["host_ip"]
     geniass_path = vals["geniass_path"]
     florchebi_path = vals["florchebi_path"]
@@ -40,7 +46,7 @@ with open("settings.json") as settings:
     stoplist = vals["stoplist"]
     mirbase_path = vals["mirbase_path"]
 
-if use_chebi or use_go:
+if use_chebi or use_go or use_hpo: ###
     import MySQLdb
 if use_chebi:
     chebi_conn = MySQLdb.connect(host=chebi_host,
@@ -52,6 +58,11 @@ if use_go:
                               user=go_user,
                               passwd=go_pw,
                               db=go_db)
+if use_hpo:
+    hpo_conn = MySQLdb.connect(host=hpo_host,
+                         user=hpo_user,
+                         passwd=hpo_pw,
+                         db=hpo_db)
 
 all_entity_types = ("Gene",
                      "Gene_Family",
@@ -368,6 +379,24 @@ paths = {
         'corpus': "data/coloncancer_test.txt.pickle",
         'format': "tempeval"
     },
+    'hpo_train':{ #Training Sets
+                  'text': "corpora/hpo/train_corpus/",
+                  'annotations': "corpora/hpo/train_ann/",
+                  'corpus': "data/hpo_train.txt.pickle",
+                  'format': "hpo",
+                   },
+    'hpo_test':{ #Testing Sets
+                  'text': "corpora/hpo/test_corpus/",
+                  'annotations': "corpora/hpo/test_ann/",
+                  'corpus': "data/hpo_test.txt.pickle",
+                  'format': "hpo",
+    },
+    'tsuite':{ #Testing Sets
+                  'text': "corpora/test_suite/test_suites/",
+                  'annotations': "corpora/test_suite/test_suites/",
+                  'corpus': "data/test_suite.txt.pickle",
+                  'format': "tsuite",
+    },
 
     'chemdner_sample': { # CHEMDNER 2013
                          'text': chemdner_sample_base + "chemdner_sample_abstracts.txt",
@@ -397,4 +426,5 @@ paths = {
                      'corpus': "data/ddi_trainall.txt.pickle",
                      'format': "ddi",
                      },
+
 }

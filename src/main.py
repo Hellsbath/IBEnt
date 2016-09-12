@@ -19,7 +19,7 @@ from classification.ner.taggercollection import TaggerCollection
 from classification.results import ResultsNER, ResultSetNER
 from classification.rext.crfre import CrfSuiteRE
 from classification.rext.jsrekernel import JSREKernel
-from classification.rext.multir import MultiR
+#from classification.rext.multir import MultiR
 from classification.rext.rules import RuleClassifier
 from classification.rext.scikitre import ScikitRE
 from classification.rext.stanfordre import StanfordRE
@@ -36,6 +36,8 @@ from reader.mirtext_corpus import MirtexCorpus
 from reader.pubmed_corpus import PubmedCorpus
 from reader.tempEval_corpus import TempEvalCorpus
 from reader.transmir_corpus import TransmirCorpus
+from reader.hpo_corpus import HPOCorpus ######### 
+from reader.test_suite import SuiteCorpus #######
 from text.corpus import Corpus
 
 if config.use_chebi:
@@ -83,6 +85,12 @@ def load_corpus(goldstd, corpus_path, corpus_format, corenlp_client):
     elif corpus_format == "jnlpba":
         corpus = JNLPBACorpus(corpus_path)
         corpus.load_corpus(corenlp_client)
+    elif corpus_format == "hpo":            ##########
+        corpus = HPOCorpus(corpus_path)     ##########
+        corpus.load_corpus(corenlp_client)  ##########
+    elif corpus_format == "tsuite":            ##########
+        corpus = SuiteCorpus(corpus_path)     ##########
+        corpus.load_corpus(corenlp_client)  ##########
     return corpus
 
 def main():
