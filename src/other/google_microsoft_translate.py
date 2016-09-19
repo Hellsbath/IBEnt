@@ -12,8 +12,8 @@ microsoft_english_list = []
 
 def main():
     #start translators
-    google_translator = build('translate', 'v2', developerKey='AIzaSyCqWhZ3JVHywei2Eh3AQ0q6iqpuuUEa204')
-    microsoft_translator = Translator('HellsbathMSTranslator', 'GEz5rlSz3+yGXuOeoPcjobMU5fBYf2Ix+RfqZ0zgsic=')
+    google_translator = build('translate', 'v2', developerKey='')
+    microsoft_translator = Translator('', '')
 
 
     #Google
