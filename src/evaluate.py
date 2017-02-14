@@ -28,6 +28,10 @@ from classification.results import ResultsNER
 
 from pycorenlp import StanfordCoreNLP
 
+
+same_flag = [False]
+
+
 def get_gold_ann_set(corpus_type, gold_path, entity_type, pair_type, text_path):
     if corpus_type == "chemdner":
         goldset = get_chemdner_gold_ann_set(gold_path)
@@ -79,6 +83,37 @@ def compare_results(offsets, goldoffsets, corpus, getwords=True, evaltype="entit
     tps = offsets & goldoffsets
     fps = offsets - goldoffsets
     fns = goldoffsets - offsets
+
+    #print same_flag, "*****"
+
+    same_terms = False
+    same_terms2 = False
+    if same_flag[0] == True:
+        same_terms = True
+        same_terms2 = True
+    if same_terms: #IT DOESN'T CHANGE REPORT. NEED TO PUT IN GET REPORT TO MAKE IT WRITE THE INFO
+        train_annotations = open("data/annotation_gazette.txt").readlines()
+        tann = []
+        to_remove = []
+        to_remove2 = []
+        gaz = None
+        if same_terms2:
+            gaz = open("data/gazette.txt").readlines()
+            train_annotations += gaz
+        for line in train_annotations:
+            tann.append(str(line).strip().lower())
+
+        for line in fps:
+            if str(line[3].encode("utf-8")).strip().lower() in tann:
+                #print line
+                to_remove.append(line)
+            #else:
+                #print str(line[3]).strip().lower()
+                #if str(line[3]).strip().lower() == "tumors":
+                    #print line
+        for line in to_remove:
+            fps.remove(line)
+
     fpreport, fpwords = get_report(fps, corpus, getwords=getwords)
     fnreport, fnwords = get_report(fns, corpus, getwords=getwords)
     tpreport, tpwords = get_report(tps, corpus, getwords=getwords)
@@ -110,7 +145,6 @@ def compare_results(offsets, goldoffsets, corpus, getwords=True, evaltype="entit
                 report.append("FN:%s" % x)
 
     return report, tps, fps, fns
-
 
 def get_report(results, corpus, getwords=True):
     """
@@ -238,11 +272,9 @@ def get_results(results, models, gold_offsets, ths, rules, compare_text=True):
     :param ths: Validation thresholds
     :param rules: Validation rules
     """
-    #for doc in results.corpus.documents:
-    #    for sentence in results.corpus.documents[doc].sentences:
-    #        #print sentence.sid, sentence.text
-    #       sentence.entities.validate_entities(models, rules, ths)
+
     offsets = results.corpus.get_offsets(models, ths, rules)
+
     # logging.debug(offsets)
     for o in offsets:
         if o[0] not in results.corpus.documents:
@@ -250,32 +282,8 @@ def get_results(results, models, gold_offsets, ths, rules, compare_text=True):
             sys.exit()
     if not compare_text: #e.g. gold standard does not include the original text
         offsets = [(o[0], o[1], o[2], "") for o in offsets]
-    # logging.info("system entities: {}; gold entities: {}".format(offsets, gold_offsets))
     reportlines, tps, fps, fns = compare_results(set(offsets), gold_offsets, results.corpus, getwords=compare_text)
 
-    if "same_terms" in rules: #IT DOESN'T CHANGE REPORT. NEED TO PUT IN GET REPORT TO MAKE IT WRITE THE INFO
-        train_annotations = open("data/annotation_gazette.txt").readlines()
-        tann = []
-        to_remove = []
-        for line in train_annotations:
-            tann.append(str(line).strip())
-
-        #print "*************************", "brachydactyly" in tann
-
-        for line in fps:
-            if str(line[3]).strip().lower() in tann:
-                to_remove.append(line)
-            #if str(line[3]).strip().lower() == "brachydactyly":
-                #print line
-        for line in to_remove:
-            fps.remove(line)
-
-        #for line in fps:
-        #    print line
-
-#    print tps
-#    print fps
-#    print fns
     with codecs.open(results.path + "_report.txt", 'w', "utf-8") as reportfile:
         print "writing report to {}_report.txt".format(results.path)
         reportfile.write("TPs: {!s}\nFPs: {!s}\nFNs: {!s}\n".format(len(tps), len(fps), len(fns)))
@@ -297,36 +305,32 @@ def get_results(results, models, gold_offsets, ths, rules, compare_text=True):
     aa = open("data/fps_same_terms.txt", "a")
     b = open("data/fns.txt", "a")
     gz = open("data/annotation_gazette.txt").readlines()
+    gaz = open("data/gazette.txt").readlines()
     a.write("Precision: {!s}\nRecall: {!s}\n".format(precision, recall))
     b.write("Precision: {!s}\nRecall: {!s}\n".format(precision, recall))
 
     ll = []
     gg = []
     
-    for line in gz:
+    for line in gz+gaz:
         #print line.strip()
-        gg.append(str(line).strip())
+        gg.append(str(line).strip().lower())
     for x in fps:
-        ll.append(str(x[3].encode("utf-8")).strip())
+        ll.append(str(x[3].encode("utf-8")).strip().lower())
 
     for line in ll:
         #print line
         if str(line).strip() not in gg:
-            a.write(line + "\n")
+            a.write(line.lower() + "\n")
         else:
-            aa.write(line + "\n")
+            aa.write(line.lower() + "\n")
 
     for x in fns:
-        b.write(str(x[3].encode("utf-8")).strip() + "\n")
+        b.write(str(x[3].encode("utf-8")).strip().lower() + "\n")
     a.close()
     b.close()
-
-
+    
     return precision, recall
-
-
-
-
 
 def main():
     start_time = time.time()
@@ -396,6 +400,8 @@ def main():
             if options.ptype:
                 get_relations_results(results, options.models, goldset[1], ths, options.rules)
             else:
+                if "same_terms" in options.rules:
+                    same_flag[0] = True
                 get_results(results, options.models, goldset[0], ths, options.rules)
             #if options.bceval:
             #    write_chemdner_files(results, options.models, goldset, ths, options.rules)
