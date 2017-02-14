@@ -20,3 +20,6 @@ useDisjunctive=true
 entitySubclassification = SBIEO
 useObservedSequencesOnly = true
 
+useDistSim = true
+distSimLexicon = data/paths
+distSimFileFormat = terrykoo
